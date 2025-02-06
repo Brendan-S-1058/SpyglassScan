@@ -6,7 +6,7 @@
     <title>QR Code Scanner</title>
 </head>
 <body>
-    <button id="filePickerBtn">Select ScoutIn.txt</button>
+    <button id="filePickerBtn" style="display: none;">Select ScoutIn.txt</button>
     <p id="fileStatus">No file selected.</p>
     <video id="video" autoplay playsinline style="width: 100%; display: none;"></video>
     <canvas id="canvas" style="display: none;"></canvas>
@@ -15,50 +15,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
     <script>
-        let fileHandle = null;
         let lastQRData = "";
-
-        document.getElementById("filePickerBtn").addEventListener("click", async () => {
-            try {
-                [fileHandle] = await window.showOpenFilePicker({
-                    types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
-                    multiple: false
-                });
-
-                document.getElementById("fileStatus").innerText = "Selected file: ScoutIn.txt";
-                alert("File selected! Now scanning QR codes...");
-                startQRScanner();
-            } catch (err) {
-                alert("File access denied or not supported.");
-            }
-        });
-
-        async function appendToFile() {
-            if (!fileHandle || !lastQRData) {
-                alert("No file selected or no QR data detected.");
-                return;
-            }
-
-            try {
-                // Read existing content
-                const file = await fileHandle.getFile();
-                let existingContent = await file.text();
-
-                // Append new QR data
-                const updatedContent = existingContent + "\n" + lastQRData;
-
-                // Request user activation before writing (fixes SecurityError)
-                const writable = await fileHandle.createWritable();
-                await writable.write(updatedContent);
-                await writable.close();
-
-                alert("QR Code saved to ScoutIn.txt!");
-                document.getElementById("saveBtn").style.display = "none"; // Hide button after saving
-            } catch (error) {
-                console.error("File write error:", error);
-                alert("Failed to save the QR Code. Ensure permissions are granted.");
-            }
-        }
 
         async function startQRScanner() {
             const video = document.getElementById("video");
@@ -94,7 +51,35 @@
             video.onloadedmetadata = () => requestAnimationFrame(scanQRCode);
         }
 
-        document.getElementById("saveBtn").addEventListener("click", appendToFile);
+        function saveQRToLocalStorage() {
+            if (!lastQRData) {
+                alert("No QR data detected.");
+                return;
+            }
+
+            // Retrieve existing QR data from localStorage
+            let savedData = localStorage.getItem("qrCodes");
+            if (savedData) {
+                savedData = JSON.parse(savedData); // Parse the saved data
+            } else {
+                savedData = []; // If no data exists, initialize an empty array
+            }
+
+            // Append the new QR code data
+            savedData.push(lastQRData);
+
+            // Save the updated data back to localStorage
+            localStorage.setItem("qrCodes", JSON.stringify(savedData));
+
+            alert("QR Code saved to localStorage!");
+            document.getElementById("saveBtn").style.display = "none"; // Hide save button after saving
+            startQRScanner();
+        }
+
+        document.getElementById("saveBtn").addEventListener("click", saveQRToLocalStorage);
+
+        // Start scanning as soon as the page loads
+        startQRScanner();
     </script>
 </body>
 </html>
