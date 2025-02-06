@@ -71,7 +71,9 @@
             // Save the updated data back to localStorage
             localStorage.setItem("qrCodes", JSON.stringify(savedData));
 
-            alert("QR Code saved to localStorage!");
+            let totalData = localStorage.getItem("qrCodes");
+
+            alert(totalData);
             document.getElementById("saveBtn").style.display = "none"; // Hide save button after saving
             startQRScanner();
         }
