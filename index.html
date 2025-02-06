@@ -15,49 +15,21 @@
     
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
     <script>
-        let fileHandle = null;
         let lastQRData = "";
 
         document.getElementById("filePickerBtn").addEventListener("click", async () => {
-            try {
-                [fileHandle] = await window.showOpenFilePicker({
-                    types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
-                    multiple: false
-                });
-
-                document.getElementById("fileStatus").innerText = "Selected file: ScoutIn.txt";
-                alert("File selected! Now scanning QR codes...");
-                startQRScanner();
-            } catch (err) {
-                alert("File access denied or not supported.");
-            }
+            alert("GitHub Pages does not support local file access. Saving QR codes to LocalStorage instead.");
+            startQRScanner();
         });
 
-        async function appendToFile() {
-            if (!fileHandle || !lastQRData) {
-                alert("No file selected or no QR data detected.");
-                return;
+        function saveToLocalStorage(qrData) {
+            let storedData = localStorage.getItem("scoutInData");
+            if (!storedData) {
+                storedData = "";
             }
-
-            try {
-                // Read existing content
-                const file = await fileHandle.getFile();
-                let existingContent = await file.text();
-
-                // Append new QR data
-                const updatedContent = existingContent + "\n" + lastQRData;
-
-                // Request user activation before writing (fixes SecurityError)
-                const writable = await fileHandle.createWritable();
-                await writable.write(updatedContent);
-                await writable.close();
-
-                alert("QR Code saved to ScoutIn.txt!");
-                document.getElementById("saveBtn").style.display = "none"; // Hide button after saving
-            } catch (error) {
-                console.error("File write error:", error);
-                alert("Failed to save the QR Code. Ensure permissions are granted.");
-            }
+            storedData += "\n" + qrData;
+            localStorage.setItem("scoutInData", storedData);
+            alert("QR Code saved to LocalStorage!");
         }
 
         async function startQRScanner() {
@@ -94,7 +66,7 @@
             video.onloadedmetadata = () => requestAnimationFrame(scanQRCode);
         }
 
-        document.getElementById("saveBtn").addEventListener("click", appendToFile);
+        document.getElementById("saveBtn").addEventListener("click", () => saveToLocalStorage(lastQRData));
     </script>
 </body>
 </html>
